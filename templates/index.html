@@ -1,0 +1,94 @@
+{{define "index.html"}}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scrooge · {{.Label}}</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="frame">
+
+  <header class="masthead">
+    <div class="title">
+      <h1>Scrooge</h1>
+      <p class="tag">What lands in your account, day by day.</p>
+    </div>
+    <div class="controls">
+      <div class="toggle" role="group" aria-label="Currency view">
+        <a href="/?m={{.Key}}&amp;view=split" class="seg{{if not .Convert}} on{{end}}">Per currency</a>
+        <a href="/?m={{.Key}}&amp;view=convert" class="seg{{if .Convert}} on{{end}}">In {{.Base}}</a>
+      </div>
+      <nav class="monthnav" aria-label="Change month">
+        <a href="/?m={{.PrevKey}}{{if .Convert}}&amp;view=convert{{end}}" class="nav-btn" aria-label="Previous month">‹</a>
+        <span class="nav-label">{{.Label}}</span>
+        <a href="/?m={{.NextKey}}{{if .Convert}}&amp;view=convert{{end}}" class="nav-btn" aria-label="Next month">›</a>
+      </nav>
+    </div>
+  </header>
+
+  {{if .Demo}}<div class="banner">Demo data. Set <code>STRIPE_API_KEY</code> to see your live Stripe forecast.</div>{{end}}
+  {{if .FXErr}}<div class="banner">Live exchange rates are unavailable right now, showing amounts per currency.</div>{{end}}
+
+  <section class="stats" aria-label="Month summary">
+    <div class="tile">
+      <span class="tile-label">Expected income</span>
+      <div class="tile-figs">
+        {{range .Expected}}<span class="fig in">{{money .Minor .Currency}}</span>{{else}}<span class="fig muted">0</span>{{end}}
+      </div>
+    </div>
+    <div class="tile">
+      <span class="tile-label">At risk, retrying</span>
+      <div class="tile-figs">
+        {{range .Risk}}<span class="fig risk">{{money .Minor .Currency}}</span>{{else}}<span class="fig muted">none</span>{{end}}
+      </div>
+    </div>
+    <div class="tile">
+      <span class="tile-label">Biggest day</span>
+      <div class="tile-figs">
+        {{with .Biggest}}<span class="fig sm">{{.Date.Format "Mon 2 Jan"}}</span>{{range .Expected}}<span class="fig in">{{money .Minor .Currency}}</span>{{end}}{{else}}<span class="fig muted">none</span>{{end}}
+      </div>
+    </div>
+    <div class="tile">
+      <span class="tile-label">Charges landing</span>
+      <div class="tile-figs"><span class="fig">{{.ChargeCount}}</span></div>
+    </div>
+  </section>
+
+  <div class="cal-scroll">
+    <section class="calendar" aria-label="{{.Label}} calendar">
+      <div class="weekdays">
+        {{range .Weekdays}}<span>{{.}}</span>{{end}}
+      </div>
+      {{range .Weeks}}<div class="week">
+        {{range .}}<div class="day{{if not .InMonth}} out{{end}}{{if .Today}} today{{end}}{{if .Past}} past{{end}}{{if .HasMoney}} lit{{end}}{{if and (not .Expected) .Risk}} risk-only{{end}}" style="--glow: {{printf "%.3f" .Glow}}">
+          <span class="dnum">{{.Date.Day}}</span>
+          {{if .HasMoney}}<div class="amts">
+            {{range .Expected}}<span class="amt in">{{money .Minor .Currency}}</span>{{end}}
+            {{range .Risk}}<span class="amt risk">↻ {{money .Minor .Currency}}</span>{{end}}
+          </div>
+          <span class="bar"></span>{{end}}
+        </div>{{end}}
+      </div>{{end}}
+    </section>
+  </div>
+
+  <section class="ledger" aria-label="Upcoming charges">
+    <h2>Upcoming ledger</h2>
+    {{if .Ledger}}<table>
+      <thead><tr><th>Date</th><th>Customer</th><th>Kind</th><th class="num">Amount</th></tr></thead>
+      <tbody>
+        {{range .Ledger}}<tr class="{{if .AtRisk}}risk-row{{end}}">
+          <td class="date">{{.Date.Format "Mon 2"}}</td>
+          <td class="who">{{.Who}}</td>
+          <td><span class="pill pill-{{.Kind}}">{{.Kind}}</span></td>
+          <td class="num {{if .AtRisk}}risk{{else}}in{{end}}">{{money .Amount .Currency}}</td>
+        </tr>{{end}}
+      </tbody>
+    </table>{{else}}<p class="empty">Nothing due this month.</p>{{end}}
+  </section>
+
+  <footer>Charge dates, not payout dates. Funds settle a couple of days later. Read only.{{if .Convert}} Converted to {{.Base}} at daily reference rates.{{end}}</footer>
+</div>
+</body>
+</html>{{end}}
