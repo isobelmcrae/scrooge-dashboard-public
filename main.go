@@ -73,13 +73,17 @@ func handleCalendar(w http.ResponseWriter, r *http.Request, sc *stripe.Client, d
 	to := from.AddDate(0, 1, 0).AddDate(0, 0, 21)
 
 	var charges []Charge
+	pessimistic := r.URL.Query().Get("mode") == "pessimistic"
 	if demo {
 		charges = demoCharges(anchor)
+		if pessimistic {
+			charges = onlyRenewals(charges)
+		}
 	} else {
 		ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 		defer cancel()
 		var err error
-		charges, err = FetchCharges(ctx, sc, from, to)
+		charges, err = FetchCharges(ctx, sc, from, to, pessimistic)
 		if err != nil {
 			log.Printf("stripe fetch failed: %v", err)
 			http.Error(w, "Could not reach Stripe. Check STRIPE_API_KEY and try again.", http.StatusBadGateway)
@@ -106,17 +110,28 @@ func handleCalendar(w http.ResponseWriter, r *http.Request, sc *stripe.Client, d
 
 	data := struct {
 		Month
-		Demo    bool
-		Convert bool
-		Base    string
-		FXErr   bool
-		Now     time.Time
-	}{month, demo, convert, baseCurrency, fxErr, now}
+		Demo        bool
+		Convert     bool
+		Base        string
+		FXErr       bool
+		Pessimistic bool
+		Now         time.Time
+	}{month, demo, convert, baseCurrency, fxErr, pessimistic, now}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if err := tmpl.ExecuteTemplate(w, "index.html", data); err != nil {
 		log.Printf("render failed: %v", err)
 	}
+}
+
+func onlyRenewals(charges []Charge) []Charge {
+	out := charges[:0]
+	for _, charge := range charges {
+		if charge.Kind == KindRenewal {
+			out = append(out, charge)
+		}
+	}
+	return out
 }
 
 // loadDotenv reads KEY=VALUE lines from path into the environment. Missing file

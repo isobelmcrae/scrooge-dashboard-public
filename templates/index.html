@@ -15,14 +15,18 @@
       <p class="tag">What lands in your account, day by day.</p>
     </div>
     <div class="controls">
+      <div class="toggle" role="group" aria-label="Forecast confidence">
+        <a href="/?m={{.Key}}{{if .Convert}}&amp;view=convert{{end}}" class="seg{{if not .Pessimistic}} on{{end}}">All expected</a>
+        <a href="/?m={{.Key}}{{if .Convert}}&amp;view=convert{{end}}&amp;mode=pessimistic" class="seg{{if .Pessimistic}} on{{end}}" title="Active subscription renewals only">Pessimistic</a>
+      </div>
       <div class="toggle" role="group" aria-label="Currency view">
-        <a href="/?m={{.Key}}&amp;view=split" class="seg{{if not .Convert}} on{{end}}">Per currency</a>
-        <a href="/?m={{.Key}}&amp;view=convert" class="seg{{if .Convert}} on{{end}}">In {{.Base}}</a>
+        <a href="/?m={{.Key}}&amp;view=split{{if .Pessimistic}}&amp;mode=pessimistic{{end}}" class="seg{{if not .Convert}} on{{end}}">Per currency</a>
+        <a href="/?m={{.Key}}&amp;view=convert{{if .Pessimistic}}&amp;mode=pessimistic{{end}}" class="seg{{if .Convert}} on{{end}}">In {{.Base}}</a>
       </div>
       <nav class="monthnav" aria-label="Change month">
-        <a href="/?m={{.PrevKey}}{{if .Convert}}&amp;view=convert{{end}}" class="nav-btn" aria-label="Previous month">‹</a>
+        <a href="/?m={{.PrevKey}}{{if .Convert}}&amp;view=convert{{end}}{{if .Pessimistic}}&amp;mode=pessimistic{{end}}" class="nav-btn" aria-label="Previous month">‹</a>
         <span class="nav-label">{{.Label}}</span>
-        <a href="/?m={{.NextKey}}{{if .Convert}}&amp;view=convert{{end}}" class="nav-btn" aria-label="Next month">›</a>
+        <a href="/?m={{.NextKey}}{{if .Convert}}&amp;view=convert{{end}}{{if .Pessimistic}}&amp;mode=pessimistic{{end}}" class="nav-btn" aria-label="Next month">›</a>
       </nav>
     </div>
   </header>
@@ -32,7 +36,7 @@
 
   <section class="stats" aria-label="Month summary">
     <div class="tile">
-      <span class="tile-label">Expected income</span>
+      <span class="tile-label">{{if .Pessimistic}}Active renewals{{else}}Expected income{{end}}</span>
       <div class="tile-figs">
         {{range .Expected}}<span class="fig in">{{money .Minor .Currency}}</span>{{else}}<span class="fig muted">0</span>{{end}}
       </div>
@@ -88,7 +92,7 @@
     </table>{{else}}<p class="empty">Nothing due this month.</p>{{end}}
   </section>
 
-  <footer>Charge dates, not payout dates. Funds settle a couple of days later. Read only.{{if .Convert}} Converted to {{.Base}} at daily reference rates.{{end}}</footer>
+  <footer>Charge dates, not payout dates. Funds settle a couple of days later. Read only.{{if .Pessimistic}} Pessimistic mode includes active subscription renewals only.{{end}}{{if .Convert}} Converted to {{.Base}} at daily reference rates.{{end}}</footer>
 </div>
 </body>
 </html>{{end}}

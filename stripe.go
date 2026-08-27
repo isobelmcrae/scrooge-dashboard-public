@@ -12,7 +12,7 @@ import (
 // FetchCharges pulls active/trialing subscriptions and open (retrying) invoices
 // from Stripe and projects every expected charge that lands in [from, to].
 // It is read-only.
-func FetchCharges(ctx context.Context, sc *stripe.Client, from, to time.Time) ([]Charge, error) {
+func FetchCharges(ctx context.Context, sc *stripe.Client, from, to time.Time, pessimistic bool) ([]Charge, error) {
 	var out []Charge
 
 	// --- Subscriptions: project recurring renewals + trial first-charges ---
@@ -26,7 +26,13 @@ func FetchCharges(ctx context.Context, sc *stripe.Client, from, to time.Time) ([
 		if err != nil {
 			return nil, fmt.Errorf("listing subscriptions: %w", err)
 		}
+		if pessimistic && sub.Status != stripe.SubscriptionStatusActive {
+			continue
+		}
 		out = append(out, projectSubscription(sub, from, to)...)
+	}
+	if pessimistic {
+		return out, nil
 	}
 
 	// --- Open invoices: dunning retries are at-risk money on their retry date ---
