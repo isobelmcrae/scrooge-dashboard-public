@@ -1,0 +1,18 @@
+x-zenith:
+  catalog:
+    name: Scrooge Dashboard
+  expose:
+    - service: app
+      port: 8080
+      web: true
+  env:
+    STRIPE_API_KEY:
+      input:
+        label: Stripe restricted API key
+        description: Read-only restricted key. Leave blank for demo mode.
+        required: false
+        secret: true
+
+services:
+  app:
+    image: ghcr.io/isobelmcrae/scrooge-dashboard-public@sha256:b1259f77296feff95e1da6163c787f2d18b257e565d28bf2e8bd53dcfbe06939
