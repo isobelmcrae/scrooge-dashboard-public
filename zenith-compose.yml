@@ -1,6 +1,17 @@
 x-zenith:
   catalog:
     name: Scrooge Dashboard
+    description: See upcoming Stripe subscription charges, trial conversions, and payment retries on a calendar.
+    detail: >-
+      Scrooge Dashboard gives you a read-only calendar of upcoming charges for one
+      Stripe account. Review subscription renewals, first charges after trials,
+      and scheduled payment retries by day. Amounts are grouped by currency.
+      Dates show customer charges rather than bank payout settlement dates.
+      Connect a read-only restricted Stripe key, or explore sample data without one.
+    authors: [Isobel McRae]
+    tags: [finance, stripe, dashboard]
+    source: https://github.com/isobelmcrae/scrooge-dashboard-public
+    license: UNLICENSED
   expose:
     - service: app
       port: 8080
